@@ -16,6 +16,7 @@ from reflex.event import run_script
 from reflex.experimental import hooks
 from reflex.state import ComponentState
 from reflex.style import Style
+from reflex.vars import Var
 from reflex.vars.base import Var
 
 
@@ -44,14 +45,16 @@ class Sidebar(Box, MemoizationLeaf):
         Returns:
             The style of the component.
         """
-        sidebar: Component = self.children[-2]  # type: ignore
-        spacer: Component = self.children[-1]  # type: ignore
-        open = (
-            self.State.open  # type: ignore
-            if self.State
-            else Var(_js_expr="open")
+        sidebar, spacer = (
+            self.children[-2],
+            self.children[-1],
+        )  # Retrieve both components together
+        open_state = self.State.open if self.State else Var(_js_expr="open")
+        display_value = "block" if open_state else "none"  # Avoid repeated cond() calls
+
+        sidebar.style["display"] = spacer.style["display"] = (
+            display_value  # Directly assign the computed value
         )
-        sidebar.style["display"] = spacer.style["display"] = cond(open, "block", "none")
 
         return Style(
             {
